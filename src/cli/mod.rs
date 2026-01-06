@@ -33,7 +33,7 @@ impl Command {
         global: &global_args::GlobalArgs,
     ) -> Result<()> {
         match self {
-            Command::Bump(args) => self.bump(&metadata, &args, &global),
+            Command::Bump(args) => self.bump(metadata, args, global),
         }
     }
     fn bump(

@@ -38,7 +38,7 @@ impl Metadata {
                         .0
                         .packages
                         .iter()
-                        .find(|p| &p.name == name)
+                        .find(|p| p.name == name)
                         .ok_or_else(|| anyhow!("package `{}` not found", name))?;
                     out.push(pkg);
                 }
