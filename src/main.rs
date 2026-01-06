@@ -2,6 +2,8 @@ use anyhow::Result;
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
 
+use crate::cli::CargoGooseCli;
+
 mod cli;
 mod metadata;
 mod version;
@@ -11,9 +13,11 @@ fn main() -> Result<()> {
     let metadata = MetadataCommand::new().exec()?.into();
 
     // parse args
-    let args = cli::Cli::parse();
+    let args = cli::CargoGooseCli::parse();
 
-    args.execute(&metadata)?;
+    match args {
+        CargoGooseCli::Goose(args) => args.execute(&metadata)?,
+    }
 
     Ok(())
 }

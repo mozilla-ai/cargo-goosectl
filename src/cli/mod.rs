@@ -7,11 +7,14 @@ mod commands;
 mod global_args;
 
 #[derive(Debug, Parser)]
-#[command(
-    name = "cargo-goose",
-    bin_name = "cargo",
-    subcommand_required = true
-)]
+#[command(author, version, about, long_about = None)]
+#[command(name = "cargo-goose")]
+#[command(bin_name = "cargo")]
+pub enum CargoGooseCli {
+    Goose(Cli),
+}
+
+#[derive(Debug, Parser)]
 pub struct Cli {
     #[command(subcommand)]
     pub cmd: Command,
