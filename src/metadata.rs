@@ -46,12 +46,18 @@ impl Metadata {
             }
 
             (false, true) => {
-                // default package
-                let pkg = self
-                    .0
-                    .root_package()
-                    .ok_or_else(|| anyhow!("no default package found"))?;
-                Ok(vec![pkg])
+                // if there is a root package, we use that
+                if let Some(pkg) = self.0.root_package() {
+                    Ok(vec![pkg])
+                } else {
+                    // no root package → apply to all workspace members
+                    Ok(self
+                        .0
+                        .packages
+                        .iter()
+                        .filter(|p| self.0.workspace_members.contains(&p.id))
+                        .collect())
+                }
             }
         }
     }
