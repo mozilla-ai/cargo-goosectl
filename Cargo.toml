@@ -1,9 +1,13 @@
 [package]
 name = "cargo-goose"
 description = "A strict, explicit SemVer CLI with first-class prerelease support."
-version = "0.1.0"
+version = "0.1.1"
 license = "Apache-2.0"
 edition = "2024"
+
+[[bin]]
+name = "cargo-goose"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.100"
