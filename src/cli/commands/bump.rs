@@ -1,6 +1,6 @@
 use clap::{Args, Subcommand};
 
-use crate::version::{transition::SemverTransition, version::ReleaseLevel};
+use crate::version::{semantic_version::ReleaseLevel, transition::SemverTransition};
 
 #[derive(Debug, Clone, Args)]
 pub struct BumpArgs {

@@ -77,7 +77,7 @@ impl SemanticVersion {
     }
 }
 
-impl<'a> TryFrom<Version> for SemanticVersion {
+impl TryFrom<Version> for SemanticVersion {
     type Error = anyhow::Error;
 
     fn try_from(val: Version) -> Result<Self> {

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::version::version::SemanticVersion;
+use crate::version::semantic_version::SemanticVersion;
 
 mod commands;
 mod global_args;

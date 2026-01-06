@@ -1,8 +1,8 @@
-use crate::version::version::{Prerelease, SemanticVersion};
+use crate::version::semantic_version::{Prerelease, SemanticVersion};
 
 use anyhow::{Result, bail};
 
-use super::version::ReleaseLevel;
+use super::semantic_version::ReleaseLevel;
 
 #[derive(Debug)]
 pub enum SemverTransition {
