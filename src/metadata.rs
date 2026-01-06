@@ -10,6 +10,10 @@ impl From<cargo_metadata::Metadata> for Metadata {
 }
 
 impl Metadata {
+    pub fn all_packages(&self) -> Result<Vec<&Package>> {
+        Ok(self.0.packages.iter().collect())
+    }
+
     pub fn select_packages<'a>(
         &'a self,
         workspace: bool,

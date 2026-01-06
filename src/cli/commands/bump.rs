@@ -6,6 +6,12 @@ use crate::version::{semantic_version::ReleaseLevel, transition::SemverTransitio
 pub struct BumpArgs {
     #[command(subcommand)]
     target: VersionBump,
+    #[arg(
+        long,
+        help = "Do not update workspace dependency versions when bumping a package",
+        default_value = "false"
+    )]
+    pub no_propagate: bool,
 }
 
 #[derive(Debug, Clone, Subcommand)]
