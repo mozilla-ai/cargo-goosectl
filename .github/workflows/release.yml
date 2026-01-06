@@ -1,0 +1,128 @@
+name: release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: "Manually specify the release version (e.g. 1.2.3)"
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  create-tag:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       (contains(github.event.pull_request.labels.*.name, 'beta') ||
+        contains(github.event.pull_request.labels.*.name, 'rc') ||
+        contains(github.event.pull_request.labels.*.name, 'release') ||
+        contains(github.event.pull_request.labels.*.name, 'patch') ||
+        contains(github.event.pull_request.labels.*.name, 'minor') ||
+        contains(github.event.pull_request.labels.*.name, 'major')))
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.versioning.outputs.VERSION }}
+      prerelease: ${{ steps.versioning.outputs.PRERELEASE }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Determine version
+        id: versioning
+        run: |
+          # 1) If manual workflow_dispatch override given, use that
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && \
+             [[ -n "${{ github.event.inputs.version_override }}" ]]; then
+             VERSION="${{ github.event.inputs.version_override }}"
+             PRE="false"
+             echo "Using manual override: $VERSION"
+          else
+            # 2) Extract version from pyproject.toml or Cargo.toml
+            if [ -f "Cargo.toml" ]; then
+              VERSION=$(grep '^version = "'Cargo.toml | head -1 | cut -d'"' -f2 | sed 's/+.*//')
+            else
+              echo "Could not find version file."
+              exit 1
+            fi
+
+            # 3) Determine prerelease type
+            if [[ "${{ contains(github.event.pull_request.labels.*.name, 'beta') }}" == "true" ]]; then
+              PRE="true"
+            elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'rc') }}" == "true" ]]; then
+              PRE="true"
+            else
+              PRE="false"
+            fi
+          fi
+
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "PRERELEASE=${PRE}" >> $GITHUB_OUTPUT
+
+      - name: Create tag if missing
+        run: |
+          VERSION="${{ steps.versioning.outputs.VERSION }}"
+
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists."
+          else
+            git tag -a "v${VERSION}" -m "Version ${VERSION}"
+            git push origin "v${VERSION}"
+          fi
+
+  publish-cargo-goose:
+    needs: create-tag
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Publish cargo-goose (dry-run)
+        run: cargo publish -p cargo-goose --dry-run
+
+      - name: Publish cargo-goose
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p cargo-goose
+
+  create-release:
+    needs: [create-tag, publish-cargo-goose]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.create-tag.outputs.version }}
+          name: v${{ needs.create-tag.outputs.version }}
+          prerelease: ${{ needs.create-tag.outputs.prerelease }}
+          files: |
+            dist/**/*.tar.gz
+          generate_release_notes: true
