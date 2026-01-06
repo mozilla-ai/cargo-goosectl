@@ -7,6 +7,11 @@ mod commands;
 mod global_args;
 
 #[derive(Debug, Parser)]
+#[command(
+    name = "cargo-goose",
+    bin_name = "cargo",
+    subcommand_required = true
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub cmd: Command,
