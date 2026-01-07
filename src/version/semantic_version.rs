@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_prerelease_semver_eq() {
-        let gold = cargo_metadata::semver::Prerelease::new(&"beta.1".to_string()).unwrap();
+        let gold = cargo_metadata::semver::Prerelease::new("beta.1").unwrap();
         let pred = Prerelease {
             ident: "beta".to_string(),
             iteration: 1,
