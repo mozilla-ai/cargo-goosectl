@@ -91,7 +91,12 @@ jobs:
         run: cargo install cargo-llvm-cov --force
 
       - name: Generate coverage
-        run: make coverage
+        run: |
+          cargo llvm-cov \
+            --workspace \
+            --all-features \
+            --lcov \
+            --output-path lcov.info
 
       - name: Upload to codecov
         uses: codecov/codecov-action@v2
