@@ -142,6 +142,126 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_semantic_version_display() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        assert_eq!(sv.to_string(), "1.2.3");
+    }
+
+    #[test]
+    fn test_semantic_version_is_prerelease() {
+        let v = Version::parse("1.2.3-beta.1").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        assert!(sv.is_prerelease());
+    }
+
+    #[test]
+    fn test_semantic_version_not_prerelease() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        assert!(!sv.is_prerelease());
+    }
+
+    #[test]
+    fn test_semantic_version_clear_prerelease() {
+        let v = Version::parse("1.2.3-beta.1").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let cleared = sv.clear_prerelease().unwrap();
+
+        assert!(!cleared.is_prerelease());
+        assert_eq!(cleared.to_string(), "1.2.3");
+    }
+
+    #[test]
+    fn test_semantic_version_with_metadata() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let with_meta = sv.with_metadata(Some("build.42".to_string())).unwrap();
+
+        assert_eq!(with_meta.to_string(), "1.2.3+build.42");
+    }
+
+    #[test]
+    fn test_semantic_version_with_invalid_metadata_fails() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let result = sv.with_metadata(Some("invalid metadata".to_string()));
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_semantic_version_with_prerelease() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let pr = Prerelease::parse("alpha.7").unwrap();
+        let with_pr = sv.with_prerelease(pr).unwrap();
+
+        assert_eq!(with_pr.to_string(), "1.2.3-alpha.7");
+    }
+
+    #[test]
+    fn test_bump_patch() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let bumped = sv.bump_level(ReleaseLevel::Patch).unwrap();
+
+        assert_eq!(bumped.to_string(), "1.2.4");
+    }
+
+    #[test]
+    fn test_bump_minor() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let bumped = sv.bump_level(ReleaseLevel::Minor).unwrap();
+
+        assert_eq!(bumped.to_string(), "1.3.0");
+    }
+
+    #[test]
+    fn test_bump_major() {
+        let v = Version::parse("1.2.3").unwrap();
+        let sv = SemanticVersion::try_from(v).unwrap();
+
+        let bumped = sv.bump_level(ReleaseLevel::Major).unwrap();
+
+        assert_eq!(bumped.to_string(), "2.0.0");
+    }
+
+    #[test]
+    fn test_try_from_rejects_invalid_prerelease_format() {
+        // semver allows this syntactically, but your wrapper explicitly rejects it
+        let v = Version::parse("1.2.3-beta").unwrap();
+
+        let result = SemanticVersion::try_from(v);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_prerelease_parse_rejects_extra_components() {
+        let result = Prerelease::parse("beta.1.extra");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_prerelease_parse_rejects_non_numeric_iteration() {
+        let result = Prerelease::parse("beta.one");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_prerelease_semver_eq() {
         let gold = cargo_metadata::semver::Prerelease::new("beta.1").unwrap();
         let pred = Prerelease {
