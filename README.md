@@ -11,6 +11,9 @@ A strict, explicit SemVer CLI with first-class prerelease support.
   <a href="https://github.com/mozilla-ai/cargo-goose/actions/workflows/release.yml">
     <img src="https://github.com/mozilla-ai/cargo-goose/actions/workflows/release.yml/badge.svg" alt="Lint">
   </a>
+  <a href="https://codecov.io/gh/mozilla-ai/cargo-goose" > 
+    <img src="https://codecov.io/gh/mozilla-ai/cargo-goose/graph/badge.svg?token=RYYJ2XMWAR"/> 
+  </a>
 </p>
 
 
