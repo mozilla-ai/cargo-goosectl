@@ -1,0 +1,129 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - .github/**
+      - docs/**
+      - CONTRIBUTING.md
+      - CODE_OF_CONDUCT.md
+      - README.md
+      - mkdocs.yml
+      - examples/**
+      - .vscode/**
+  pull_request:
+    paths-ignore:
+      - .github/**
+      - docs/**
+      - CONTRIBUTING.md
+      - CODE_OF_CONDUCT.md
+      - README.md
+      - mkdocs.yml
+      - examples/**
+      - .vscode/**
+  workflow_dispatch:
+
+jobs:
+#   run_benchmarks:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Cache cargo
+#         uses: actions/cache@v4
+#         with:
+#           path: |
+#             ~/.cargo/registry
+#             ~/.cargo/git
+#             target
+#           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+#       - name: Cache cargo binaries
+#         uses: actions/cache@v4
+#         with:
+#           path: ~/.cargo/bin
+#           key: ${{ runner.os }}-cargo-bins
+
+#       - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+#       - name: Install codspeed
+#         run: cargo binstall cargo-codspeed --no-confirm --force
+
+#       - name: Build the benchmark target(s)
+#         run: cargo codspeed build --all-features
+
+#       - name: Run the benchmarks
+#         uses: CodSpeedHQ/action@v4
+#         with:
+#           mode: instrumentation
+#           run: cargo codspeed run
+#           token: ${{ secrets.CODSPEED_TOKEN }}
+
+  run_unit_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bins
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      
+      - name: Install llvm-tools-preview
+        run: rustup component add llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        run: cargo binstall cargo-llvm-cov --force --no-confirm
+
+      - name: Generate coverage
+        run: make coverage
+
+      - name: Upload to codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bins
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      
+      - run: rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy
+
+      - name: Run Clippy
+        run: cargo clippy --all-features --all-targets -- -D warnings
