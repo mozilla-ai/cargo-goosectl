@@ -44,25 +44,21 @@ runs:
     - run: cargo install cargo-goose
       shell: bash
 
-    - id: get
+    - id: parse
       run: |
         ARGS="current-version --format=json"
         if [ "${{ inputs.force-single-version }}" = "true" ]; then
           ARGS="$ARGS --force-single-version"
         fi
 
-        cargo goose $ARGS > version.json
-      shell: bash
-
-    - id: parse
-      run: |
-        jq -r '
-          if has("packages") then
-            .packages[0]
-          else
-            .
-          end
-          | to_entries[]
-          | "\(.key)=\(.value // "")"
-        ' version.json >> "$GITHUB_OUTPUT"
+        cargo goose $ARGS \
+          | jq -r '
+              if has("packages") then
+                .packages[0]
+              else
+                .
+              end
+              | to_entries[]
+              | "\(.key)=\(.value // "")"
+            ' >> "$GITHUB_OUTPUT"
       shell: bash
