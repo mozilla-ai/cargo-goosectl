@@ -8,13 +8,26 @@ repository = "https://github.com/mozilla-ai/cargo-goose"
 
 [[bin]]
 name = "cargo-goose"
-path = "src/main.rs"
+path = "bin/cli.rs"
+required-features = ["cli"]
+
+[[bin]]
+name = "generate-json-schemas"
+path = "bin/utils/generate-json-schemas.rs"
+required-features = ["_internal"]
+
+[features]
+default = ["cli"]
+_internal = []
+cli = ["dep:clap"]
 
 [dependencies]
 anyhow = "1.0.100"
 cargo_metadata = "0.23.1"
+figment = { version = "0.10.19", features = ["toml"] }
 once_cell = "1.21.3"
 regex = "1.12.2"
+schemars = "1.2.0"
 serde = { version = "1.0.228", features = ["serde_derive"] }
 serde_json = "1.0.149"
 toml_edit = { version = "0.24.0", features = ["serde"] }
@@ -22,3 +35,4 @@ toml_edit = { version = "0.24.0", features = ["serde"] }
 [dependencies.clap]
 version = "4.5.54"
 features = ["derive"]
+optional = true

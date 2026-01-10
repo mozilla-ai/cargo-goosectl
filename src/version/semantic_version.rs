@@ -1,6 +1,5 @@
 use anyhow::{Context, Result, bail};
 use cargo_metadata::semver::Version;
-use clap::ValueEnum;
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct SemanticVersion(Version);
@@ -137,7 +136,7 @@ impl Prerelease {
     }
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone)]
 pub enum ReleaseLevel {
     Patch,
     Minor,
