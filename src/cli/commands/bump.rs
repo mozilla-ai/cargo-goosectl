@@ -1,6 +1,6 @@
-use clap::{Args, Subcommand};
+use clap::{Args, Subcommand, ValueEnum};
 
-use crate::version::{semantic_version::ReleaseLevel, transition::SemverTransition};
+use crate::version::transition::SemverTransition;
 
 #[derive(Debug, Clone, Args)]
 pub struct BumpArgs {
@@ -64,12 +64,32 @@ impl From<BumpArgs> for SemverTransition {
                 metadata,
             } => match pre {
                 Some(pre) => SemverTransition::StartPrerelease {
-                    level,
+                    level: level.into(),
                     pre,
                     metadata,
                 },
-                None => SemverTransition::BumpRelease { level, metadata },
+                None => SemverTransition::BumpRelease {
+                    level: level.into(),
+                    metadata,
+                },
             },
+        }
+    }
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum ReleaseLevel {
+    Patch,
+    Minor,
+    Major,
+}
+
+impl From<ReleaseLevel> for crate::version::semantic_version::ReleaseLevel {
+    fn from(val: ReleaseLevel) -> Self {
+        match val {
+            ReleaseLevel::Patch => Self::Patch,
+            ReleaseLevel::Minor => Self::Minor,
+            ReleaseLevel::Major => Self::Major,
         }
     }
 }
