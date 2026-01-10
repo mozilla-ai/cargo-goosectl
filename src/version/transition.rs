@@ -58,8 +58,7 @@ impl SemanticVersion {
             )
         }
 
-        self.clone()
-            .bump_level(level)?
+        self.bump_level(level)?
             .with_prerelease(Prerelease {
                 ident: pre,
                 iteration: 1,
@@ -68,7 +67,7 @@ impl SemanticVersion {
     }
 
     fn increment_prerelease(&self, metadata: Option<String>) -> Result<Self> {
-        let prerelease = match self.prerelease()? {
+        let prerelease = match self.prerelease() {
             Some(p) => p.increment(),
             None => {
                 bail!("You can only increment a pre-release from an existing pre-release version.")
@@ -86,7 +85,7 @@ impl SemanticVersion {
             iteration: 1,
         };
 
-        let old_prerelease = match self.prerelease()? {
+        let old_prerelease = match self.prerelease() {
             Some(p) => p,
             None => bail!("You can only transition from one prerelease to another prerelease."),
         };
@@ -114,6 +113,16 @@ impl SemanticVersion {
         }
 
         self.clone().bump_level(level)?.with_build(metadata)
+    }
+
+    pub fn bump_level(&self, level: ReleaseLevel) -> Result<Self> {
+        let (major, minor, patch) = match level {
+            ReleaseLevel::Major => (self.major() + 1, 0, 0),
+            ReleaseLevel::Minor => (self.major(), self.minor() + 1, 0),
+            ReleaseLevel::Patch => (self.major(), self.minor(), self.patch() + 1),
+        };
+
+        Ok(Self::new_release(major, minor, patch))
     }
 }
 

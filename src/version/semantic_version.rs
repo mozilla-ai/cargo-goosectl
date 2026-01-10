@@ -1,83 +1,73 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use cargo_metadata::semver::Version;
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub struct SemanticVersion(Version);
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct SemanticVersion {
+    major: u64,
+    minor: u64,
+    patch: u64,
+    pre: Option<Prerelease>,
+    build: Option<String>,
+}
 
 impl std::fmt::Display for SemanticVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self)
     }
 }
 
 impl SemanticVersion {
+    pub fn new_release(major: u64, minor: u64, patch: u64) -> Self {
+        let pre = None;
+        let build = None;
+
+        Self {
+            major,
+            minor,
+            patch,
+            pre,
+            build
+        }
+    }
+
     pub fn major(&self) -> u64 {
-        self.0.major
+        self.major
     }
 
     pub fn minor(&self) -> u64 {
-        self.0.minor
+        self.minor
     }
 
     pub fn patch(&self) -> u64 {
-        self.0.patch
+        self.patch
     }
 
-    pub fn prerelease(&self) -> Result<Option<Prerelease>> {
-        if self.0.pre.is_empty() {
-            return Ok(None);
-        }
-
-        match Prerelease::parse(self.0.pre.as_str()) {
-            Ok(p) => Ok(Some(p)),
-            Err(e) => {
-                bail!("Prerelease should have been validated. More details: {}", e);
-            }
-        }
+    pub fn prerelease(&self) -> &Option<Prerelease> {
+        &self.pre
     }
 
     pub fn is_prerelease(&self) -> bool {
-        !self.0.pre.is_empty()
+        self.pre.is_some()
     }
 
     pub fn clear_prerelease(mut self) -> Result<Self> {
-        self.0.pre = cargo_metadata::semver::Prerelease::EMPTY;
+        self.pre = None;
 
         Ok(self)
     }
 
-    pub fn build(&self) -> Option<String> {
-        match self.0.build.is_empty() {
-            true => None,
-            false => Some(self.0.build.to_string()),
-        }
+    pub fn build(&self) -> &Option<String> {
+        &self.build
     }
 
-    pub fn with_build(mut self, metadata: Option<String>) -> Result<Self> {
-        self.0.build = match metadata {
-            Some(m) => cargo_metadata::semver::BuildMetadata::new(&m)
-                .with_context(|| "metadata validated by semver")?,
-            None => cargo_metadata::semver::BuildMetadata::EMPTY,
-        };
+    pub fn with_build(mut self, build: Option<String>) -> Result<Self> {
+        self.build = build;
+
         Ok(self)
     }
 
     pub fn with_prerelease(mut self, prerelease: Prerelease) -> Result<Self> {
-        self.0.pre = prerelease.to_semver();
-
-        Ok(self)
-    }
-
-    pub fn bump_level(mut self, level: ReleaseLevel) -> Result<Self> {
-        let (major, minor, patch) = match level {
-            ReleaseLevel::Major => (self.major() + 1, 0, 0),
-            ReleaseLevel::Minor => (self.major(), self.minor() + 1, 0),
-            ReleaseLevel::Patch => (self.major(), self.minor(), self.patch() + 1),
-        };
-
-        self.0.major = major;
-        self.0.minor = minor;
-        self.0.patch = patch;
+        self.pre = Some(prerelease);
 
         Ok(self)
     }
@@ -87,15 +77,28 @@ impl TryFrom<Version> for SemanticVersion {
     type Error = anyhow::Error;
 
     fn try_from(val: Version) -> Result<Self> {
-        if !val.pre.is_empty() {
-            let _ = Prerelease::parse(val.pre.as_str())?;
-        }
+        let pre = match val.pre.is_empty() {
+            true => None,
+            false => Some(Prerelease::parse(val.pre.as_str())?)
+        };
 
-        Ok(Self(val))
+        let build = match val.build.is_empty() {
+            true => None,
+            false => Some(val.build.to_string())
+        };
+        
+
+        Ok(Self {
+            major: val.major,
+            minor: val.minor,
+            patch: val.patch,
+            pre,
+            build
+        })
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Prerelease {
     pub ident: String,
     pub iteration: u64,
@@ -160,7 +163,7 @@ mod tests {
         let v: SemanticVersion = Version::parse("1.2.3+asdf").unwrap().try_into().unwrap();
         let build = v.build();
 
-        assert_eq!(build, Some("asdf".to_string()))
+        assert_eq!(build, &Some("asdf".to_string()))
     }
 
     #[test]

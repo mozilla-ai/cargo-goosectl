@@ -100,7 +100,7 @@ impl TryFrom<SemanticVersion> for CurrentVersionRepr {
     type Error = anyhow::Error;
 
     fn try_from(val: SemanticVersion) -> Result<Self> {
-        let pre = val.prerelease()?;
+        let pre = val.prerelease().clone();
         let (pre, iteration) = match pre {
             Some(p) => (Some(p.ident), Some(p.iteration)),
             None => (None, None),
@@ -113,7 +113,7 @@ impl TryFrom<SemanticVersion> for CurrentVersionRepr {
             patch: val.patch(),
             pre,
             iteration,
-            build: val.build(),
+            build: val.build().clone(),
             is_prerelease: val.is_prerelease(),
         })
     }
