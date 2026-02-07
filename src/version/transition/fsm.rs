@@ -22,7 +22,7 @@ impl SemanticVersion {
 }
 
 impl TransitionInput {
-    pub fn kind(&self) -> TransitionKind {
+    fn kind(&self) -> TransitionKind {
         match self {
             TransitionInput::BumpRelease { .. } => TransitionKind::BumpRelease,
             TransitionInput::FinalizeRelease { .. } => TransitionKind::FinalizeRelease,
@@ -61,7 +61,7 @@ fn validate(from: &State, t: &TransitionKind) -> Result<(), TransitionError> {
 }
 
 #[derive(Debug)]
-pub enum TransitionError {
+enum TransitionError {
     StartPrereleaseFromPrerelease,
     IncrementPrereleaseFromRelease,
     FinalizeReleaseFromRelease,
@@ -95,13 +95,13 @@ impl std::fmt::Display for TransitionError {
 }
 
 #[derive(Clone, PartialEq)]
-pub enum State {
+enum State {
     Release,
     Prerelease,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TransitionKind {
+enum TransitionKind {
     StartPrerelease,
     IncrementPrerelease,
     TransitionPrerelease,
