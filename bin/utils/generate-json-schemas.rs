@@ -6,7 +6,7 @@ use schemars::{JsonSchema, schema_for};
 const SCHEMA_PATH: &str = "schemas";
 
 fn main() -> Result<()> {
-    write_to_path::<cargo_goosectl::config::Config>("goose")?;
+    write_to_path::<cargo_goosectl::config::Config>("goosectl")?;
     Ok(())
 }
 

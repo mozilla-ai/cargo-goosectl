@@ -7,7 +7,7 @@ use cargo_goosectl::cli::CargoGooseCli;
 fn main() -> Result<()> {
     // TODO: complete when we're ready to support configs
     // let config: Config = figment::Figment::new()
-    //     .merge(figment::providers::Toml::file("goose.toml"))
+    //     .merge(figment::providers::Toml::file("goosectl.toml"))
     //     .extract()?;
 
     // get cargo metadata
