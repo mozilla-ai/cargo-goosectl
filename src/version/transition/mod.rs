@@ -2,10 +2,12 @@ use crate::version::semantic_version::{Prerelease, SemanticVersion};
 
 use anyhow::{Result, bail};
 
+mod fsm;
+
 use super::semantic_version::ReleaseLevel;
 
 #[derive(Debug)]
-pub enum SemverTransition {
+pub enum TransitionInput {
     StartPrerelease {
         level: ReleaseLevel,
         pre: String,
@@ -28,21 +30,21 @@ pub enum SemverTransition {
 }
 
 impl SemanticVersion {
-    pub fn apply(&self, transition: SemverTransition) -> Result<Self> {
+    pub fn apply_unchecked(&self, transition: TransitionInput) -> Result<Self> {
         match transition {
-            SemverTransition::StartPrerelease {
+            TransitionInput::StartPrerelease {
                 level,
                 pre,
                 metadata,
             } => self.start_prerelease(level, pre, metadata),
-            SemverTransition::IncrementPrerelease { metadata } => {
+            TransitionInput::IncrementPrerelease { metadata } => {
                 self.increment_prerelease(metadata)
             }
-            SemverTransition::TransitionPrerelease { pre, metadata } => {
+            TransitionInput::TransitionPrerelease { pre, metadata } => {
                 self.transition_prerelease(pre, metadata)
             }
-            SemverTransition::FinalizeRelease { metadata } => self.finalize_release(metadata),
-            SemverTransition::BumpRelease { level, metadata } => self.bump_release(level, metadata),
+            TransitionInput::FinalizeRelease { metadata } => self.finalize_release(metadata),
+            TransitionInput::BumpRelease { level, metadata } => self.bump_release(level, metadata),
         }
     }
 
@@ -52,12 +54,6 @@ impl SemanticVersion {
         pre: String,
         metadata: Option<String>,
     ) -> Result<Self> {
-        if self.is_prerelease() {
-            bail!(
-                "You can only start a new pre-release from a release-level version (e.g., 1.2.3)."
-            )
-        }
-
         self.clone()
             .bump_level(level)?
             .with_prerelease(Prerelease {
@@ -86,10 +82,7 @@ impl SemanticVersion {
             iteration: 1,
         };
 
-        let old_prerelease = match self.prerelease()? {
-            Some(p) => p,
-            None => bail!("You can only transition from one prerelease to another prerelease."),
-        };
+        let old_prerelease = self.prerelease()?.expect("illegal state");
 
         if new_prerelease.to_semver() <= old_prerelease.to_semver() {
             bail!("New prerelease must be further than old prerelease.")
@@ -101,18 +94,10 @@ impl SemanticVersion {
     }
 
     fn finalize_release(&self, metadata: Option<String>) -> Result<Self> {
-        if !self.is_prerelease() {
-            bail!("Can only finalize release from a prerelease version.");
-        }
-
         self.clone().clear_prerelease()?.with_build(metadata)
     }
 
     fn bump_release(&self, level: ReleaseLevel, metadata: Option<String>) -> Result<Self> {
-        if self.is_prerelease() {
-            bail!("Cannot bump version line of a pre-release version.");
-        }
-
         self.clone().bump_level(level)?.with_build(metadata)
     }
 }
@@ -132,7 +117,7 @@ mod tests {
         let v = sv("1.2.3");
 
         let next = v
-            .apply(SemverTransition::StartPrerelease {
+            .apply(TransitionInput::StartPrerelease {
                 level: ReleaseLevel::Minor,
                 pre: "alpha".into(),
                 metadata: None,
@@ -146,7 +131,7 @@ mod tests {
     fn start_prerelease_fails_from_prerelease() {
         let v = sv("1.2.3-beta.1");
 
-        let result = v.apply(SemverTransition::StartPrerelease {
+        let result = v.apply(TransitionInput::StartPrerelease {
             level: ReleaseLevel::Patch,
             pre: "alpha".into(),
             metadata: None,
@@ -160,7 +145,7 @@ mod tests {
         let v = sv("1.2.3-alpha.1");
 
         let next = v
-            .apply(SemverTransition::IncrementPrerelease { metadata: None })
+            .apply(TransitionInput::IncrementPrerelease { metadata: None })
             .unwrap();
 
         assert_eq!(next.to_string(), "1.2.3-alpha.2");
@@ -171,7 +156,7 @@ mod tests {
         let v = sv("1.2.3-alpha.1");
 
         let next = v
-            .apply(SemverTransition::IncrementPrerelease {
+            .apply(TransitionInput::IncrementPrerelease {
                 metadata: Some("build.9".into()),
             })
             .unwrap();
@@ -183,7 +168,7 @@ mod tests {
     fn increment_prerelease_fails_on_release() {
         let v = sv("1.2.3");
 
-        let result = v.apply(SemverTransition::IncrementPrerelease { metadata: None });
+        let result = v.apply(TransitionInput::IncrementPrerelease { metadata: None });
 
         assert!(result.is_err());
     }
@@ -193,7 +178,7 @@ mod tests {
         let v = sv("1.2.3-alpha.3");
 
         let next = v
-            .apply(SemverTransition::TransitionPrerelease {
+            .apply(TransitionInput::TransitionPrerelease {
                 pre: "beta".into(),
                 metadata: None,
             })
@@ -206,7 +191,7 @@ mod tests {
     fn transition_prerelease_rejects_same_or_lower() {
         let v = sv("1.2.3-beta.2");
 
-        let result = v.apply(SemverTransition::TransitionPrerelease {
+        let result = v.apply(TransitionInput::TransitionPrerelease {
             pre: "beta".into(),
             metadata: None,
         });
@@ -218,7 +203,7 @@ mod tests {
     fn transition_prerelease_fails_on_release() {
         let v = sv("1.2.3");
 
-        let result = v.apply(SemverTransition::TransitionPrerelease {
+        let result = v.apply(TransitionInput::TransitionPrerelease {
             pre: "beta".into(),
             metadata: None,
         });
@@ -231,7 +216,7 @@ mod tests {
         let v = sv("1.2.3-rc.4");
 
         let next = v
-            .apply(SemverTransition::FinalizeRelease { metadata: None })
+            .apply(TransitionInput::FinalizeRelease { metadata: None })
             .unwrap();
 
         assert_eq!(next.to_string(), "1.2.3");
@@ -242,7 +227,7 @@ mod tests {
         let v = sv("1.2.3-rc.4");
 
         let next = v
-            .apply(SemverTransition::FinalizeRelease {
+            .apply(TransitionInput::FinalizeRelease {
                 metadata: Some("build.1".into()),
             })
             .unwrap();
@@ -254,7 +239,7 @@ mod tests {
     fn finalize_release_fails_on_release() {
         let v = sv("1.2.3");
 
-        let result = v.apply(SemverTransition::FinalizeRelease { metadata: None });
+        let result = v.apply(TransitionInput::FinalizeRelease { metadata: None });
 
         assert!(result.is_err());
     }
@@ -264,7 +249,7 @@ mod tests {
         let v = sv("1.2.3");
 
         let next = v
-            .apply(SemverTransition::BumpRelease {
+            .apply(TransitionInput::BumpRelease {
                 level: ReleaseLevel::Major,
                 metadata: None,
             })
@@ -278,7 +263,7 @@ mod tests {
         let v = sv("1.2.3");
 
         let next = v
-            .apply(SemverTransition::BumpRelease {
+            .apply(TransitionInput::BumpRelease {
                 level: ReleaseLevel::Patch,
                 metadata: Some("build.7".into()),
             })
@@ -291,7 +276,7 @@ mod tests {
     fn bump_release_fails_on_prerelease() {
         let v = sv("1.2.3-alpha.1");
 
-        let result = v.apply(SemverTransition::BumpRelease {
+        let result = v.apply(TransitionInput::BumpRelease {
             level: ReleaseLevel::Minor,
             metadata: None,
         });
