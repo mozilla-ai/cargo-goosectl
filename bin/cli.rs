@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     let args = CargoGooseCli::parse();
 
     match args {
-        CargoGooseCli::Goose(args) => args.execute(&metadata)?,
+        CargoGooseCli::Goosectl(args) => args.execute(&metadata)?,
     }
 
     Ok(())
