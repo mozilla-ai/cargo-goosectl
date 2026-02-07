@@ -1,6 +1,6 @@
 use clap::{Args, Subcommand, ValueEnum};
 
-use crate::version::transition::SemverTransition;
+use crate::version::transition::TransitionInput;
 
 #[derive(Debug, Clone, Args)]
 pub struct BumpArgs {
@@ -43,32 +43,32 @@ pub enum VersionBump {
     },
 }
 
-impl From<BumpArgs> for SemverTransition {
-    fn from(args: BumpArgs) -> SemverTransition {
+impl From<BumpArgs> for TransitionInput {
+    fn from(args: BumpArgs) -> TransitionInput {
         match args.target {
             VersionBump::Prerelease { pre, metadata } => {
                 match pre {
                     // graduate pre-release to another pre-release (e.g., alpha -> beta)
-                    Some(pre) => SemverTransition::TransitionPrerelease { pre, metadata },
+                    Some(pre) => TransitionInput::TransitionPrerelease { pre, metadata },
                     // increment prerelease (e.g., alpha.1 -> alpha.2)
-                    None => SemverTransition::IncrementPrerelease { metadata },
+                    None => TransitionInput::IncrementPrerelease { metadata },
                 }
             }
             VersionBump::Release { metadata } => {
                 // graduate pre-release to release
-                SemverTransition::FinalizeRelease { metadata }
+                TransitionInput::FinalizeRelease { metadata }
             }
             VersionBump::Version {
                 level,
                 pre,
                 metadata,
             } => match pre {
-                Some(pre) => SemverTransition::StartPrerelease {
+                Some(pre) => TransitionInput::StartPrerelease {
                     level: level.into(),
                     pre,
                     metadata,
                 },
-                None => SemverTransition::BumpRelease {
+                None => TransitionInput::BumpRelease {
                     level: level.into(),
                     metadata,
                 },
