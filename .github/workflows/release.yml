@@ -32,7 +32,7 @@ jobs:
 
       - id: version
         name: Get current version
-        uses: mozilla-ai/cargo-goose/actions/current-version@v1
+        uses: mozilla-ai/cargo-goosectl/actions/current-version@v1
         with:
           force-single-version: true
 
@@ -47,13 +47,13 @@ jobs:
             git push origin "v$VERSION"
           fi
 
-      - name: Publish cargo-goose (dry run)
-        run: cargo publish -p cargo-goose --dry-run
+      - name: Publish cargo-goosectl (dry run)
+        run: cargo publish -p cargo-goosectl --dry-run
 
-      - name: Publish cargo-goose
+      - name: Publish cargo-goosectl
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish -p cargo-goose
+        run: cargo publish -p cargo-goosectl
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2

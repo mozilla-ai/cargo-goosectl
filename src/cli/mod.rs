@@ -9,7 +9,7 @@ mod global_args;
 
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
-#[command(name = "cargo-goose")]
+#[command(name = "cargo-goosectl")]
 #[command(bin_name = "cargo")]
 pub enum CargoGooseCli {
     Goose(Cli),

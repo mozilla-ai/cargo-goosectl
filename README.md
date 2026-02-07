@@ -1,18 +1,18 @@
-# cargo-goose 🪿
+# cargo-goosectl 🪿
 
 <p align="center">
 A strict, explicit SemVer CLI with first-class prerelease support.
 </p>
 
 <p align="center">
-  <a href="https://github.com/mozilla-ai/cargo-goose/actions/workflows/ci.yml">
-    <img src="https://github.com/mozilla-ai/cargo-goose/actions/workflows/ci.yml/badge.svg" alt="CI">
+  <a href="https://github.com/mozilla-ai/cargo-goosectl/actions/workflows/ci.yml">
+    <img src="https://github.com/mozilla-ai/cargo-goosectl/actions/workflows/ci.yml/badge.svg" alt="CI">
   </a>
-  <a href="https://github.com/mozilla-ai/cargo-goose/actions/workflows/release.yml">
-    <img src="https://github.com/mozilla-ai/cargo-goose/actions/workflows/release.yml/badge.svg" alt="Lint">
+  <a href="https://github.com/mozilla-ai/cargo-goosectl/actions/workflows/release.yml">
+    <img src="https://github.com/mozilla-ai/cargo-goosectl/actions/workflows/release.yml/badge.svg" alt="Lint">
   </a>
-  <a href="https://codecov.io/gh/mozilla-ai/cargo-goose" > 
-    <img src="https://codecov.io/gh/mozilla-ai/cargo-goose/graph/badge.svg?token=RYYJ2XMWAR"/> 
+  <a href="https://codecov.io/gh/mozilla-ai/cargo-goosectl" > 
+    <img src="https://codecov.io/gh/mozilla-ai/cargo-goosectl/graph/badge.svg?token=RYYJ2XMWAR"/> 
   </a>
 </p>
 
@@ -20,13 +20,13 @@ A strict, explicit SemVer CLI with first-class prerelease support.
 ## Installation
 
 ```sh
-cargo install cargo-goose
+cargo install cargo-goosectl
 ```
 
 ## Usage
 
 ```sh
-cargo goose bump <command>
+cargo goosectl bump <command>
 ```
 
 ## Commands
@@ -36,18 +36,18 @@ cargo goose bump <command>
 Bump the current version by level:
 
 ```sh
-cargo goose bump version patch
+cargo goosectl bump version patch
 # 1.2.3 → 1.2.4
-cargo goose bump version minor
+cargo goosectl bump version minor
 # 1.2.3 → 1.3.0
-cargo goose bump version major
+cargo goosectl bump version major
 # 1.2.3 → 2.0.0
 ```
 
 Start a prerelease on the new version line:
 
 ```sh
-cargo goose bump version minor rc
+cargo goosectl bump version minor rc
 # 1.2.3 → 1.3.0-rc.1
 ```
 
@@ -56,14 +56,14 @@ cargo goose bump version minor rc
 Increment the current prerelease counter:
 
 ```sh
-cargo goose bump prerelease
+cargo goosectl bump prerelease
 # alpha.1 → alpha.2
 ```
 
 Transition to a new prerelease identifier:
 
 ```sh
-cargo goose bump prerelease beta
+cargo goosectl bump prerelease beta
 # 1.2.3-alpha.3 → 1.2.3-beta.1
 ```
 
@@ -72,7 +72,7 @@ cargo goose bump prerelease beta
 Finalize a prerelease into a stable release:
 
 ```sh
-cargo goose bump release
+cargo goosectl bump release
 # 1.2.0-rc.2 → 1.2.0
 ```
 
@@ -81,15 +81,15 @@ cargo goose bump release
 All commands accept optional build metadata:
 
 ```sh
-cargo goose bump version patch --metadata git.abc123
+cargo goosectl bump version patch --metadata git.abc123
 ```
 
 ### Dry run
 
-Don't want to screw up your Cargo.toml just yet? Add the `--dry-run` flag to see what cargo-goose will do without modifying any files:
+Don't want to screw up your Cargo.toml just yet? Add the `--dry-run` flag to see what cargo-goosectl will do without modifying any files:
 
 ```sh
-cargo goose --dry-run bump ...
+cargo goosectl --dry-run bump ...
 ```
 
 ## Prerelease format

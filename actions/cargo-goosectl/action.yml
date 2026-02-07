@@ -1,9 +1,9 @@
-name: cargo-goose
+name: cargo-goosectl
 description: Semver-aware cargo release helper
 
 inputs:
   args:
-    description: Arguments passed to cargo goose
+    description: Arguments passed to cargo goosectl
     required: false
     default: ""
 
@@ -15,9 +15,9 @@ runs:
         toolchain: stable
         override: true
 
-    - run: cargo install cargo-goose
+    - run: cargo install cargo-goosectl
       shell: bash
 
-    - run: cargo goose ${{ inputs.args }}
+    - run: cargo goosectl ${{ inputs.args }}
       if: inputs.args != ''
       shell: bash

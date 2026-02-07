@@ -2,7 +2,7 @@ use anyhow::Result;
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
 
-use cargo_goose::cli::CargoGooseCli;
+use cargo_goosectl::cli::CargoGooseCli;
 
 fn main() -> Result<()> {
     // TODO: complete when we're ready to support configs

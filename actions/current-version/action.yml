@@ -1,5 +1,5 @@
 name: current-version
-description: Get the current Cargo workspace version via cargo-goose
+description: Get the current Cargo workspace version via cargo-goosectl
 
 inputs:
   force-single-version:
@@ -41,7 +41,7 @@ runs:
         toolchain: stable
         override: true
 
-    - run: cargo install cargo-goose
+    - run: cargo install cargo-goosectl
       shell: bash
 
     - id: parse
@@ -51,7 +51,7 @@ runs:
           ARGS="$ARGS --force-single-version"
         fi
 
-        cargo goose $ARGS \
+        cargo goosectl $ARGS \
           | jq -r '
               if has("packages") then
                 .packages[0]
