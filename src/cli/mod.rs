@@ -12,7 +12,7 @@ mod global_args;
 #[command(name = "cargo-goosectl")]
 #[command(bin_name = "cargo")]
 pub enum CargoGooseCli {
-    Goose(Cli),
+    Goosectl(Cli),
 }
 
 #[derive(Debug, Parser)]
